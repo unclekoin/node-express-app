@@ -12,7 +12,7 @@ async function addNote(title) {
   };
 
   notes.push(note);
-  await fs.writeFile(notesPath, JSON.stringify(notes));
+  await saveNotes(notes);
   console.log(chalk.bgGreen(' Note has been added '));
 }
 
@@ -20,6 +20,10 @@ async function getNotes() {
   const data = await fs.readFile(notesPath, 'utf8');
   const notes = JSON.parse(data);
   return Array.isArray(notes) ? notes : [];
+}
+
+async function saveNotes(notes) {
+  await fs.writeFile(notesPath, JSON.stringify(notes));
 }
 
 async function printNotes() {
@@ -32,15 +36,23 @@ async function printNotes() {
 
 async function removeNote(id) {
   const notes = await getNotes();
-  const newNotes = notes.filter((note) => note.id !== id);
-  await fs.writeFile(notesPath, JSON.stringify(newNotes));
-  if (newNotes.length < notes.length) {
-    console.log(chalk.bgGreen(' Note deleted successfully! '));
+  const filtered = notes.filter((note) => note.id !== id);
+  await saveNotes(filtered);
+  if (filtered.length < notes.length) {
+    console.log(chalk.bgGreen(` Note with id: ${id} deleted successfully! `));
   } else {
     console.log(chalk.bgRed(` The note with id: ${id} does not exist! `));
   }
 }
 
+async function updateNote(id, title) {
+  const notes = await getNotes();
+  const noteIndex = notes.findIndex((note) => note.id === id);
+  notes[noteIndex].title = title;
+  await saveNotes(notes);
+  console.log(chalk.bgGreen(` Note with id: ${id} updated successfully! `));
+}
+
 module.exports = {
-  addNote, printNotes, removeNote
+  addNote, printNotes, removeNote, getNotes, updateNote
 };
